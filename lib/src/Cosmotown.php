@@ -220,10 +220,13 @@ class Cosmotown
 
     public function saveDomainInfo($domain, $options = [])
     {
-        $requestData = ['domain' => $domain, 'options' => $options];
-        $response = $this->httpClient->post('domaininfo', $requestData);
+        $requestData = ['domain' => $domain] + $options;
+        $this->logDebug('saveDomainInfo', ['domain' => $domain, 'request' => $requestData]);
+        $response = $this->httpClient->post('savedomaininfo', $requestData);
+        $result = $this->handleResponse($response);
+        $this->logDebug('saveDomainInfo_response', ['response' => $result]);
         unset($this->domainInfoCache[$domain]);
-        return $this->handleResponse($response);
+        return $result;
     }
 
     public function transferDomain($domain, $authCode)
