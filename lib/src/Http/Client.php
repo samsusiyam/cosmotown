@@ -26,10 +26,13 @@ class Client
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
+                'Accept: application/json',
                 'X-API-TOKEN: ' . $this->api_key,
             ],
+            CURLOPT_USERAGENT => 'curl/7.61.1',
             CURLOPT_TIMEOUT => 30,
             CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_FOLLOWLOCATION => true,
         ]);
 
         if ($method === 'POST') {
@@ -39,9 +42,10 @@ class Client
 
         $body = curl_exec($ch);
         $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
         curl_close($ch);
 
-        return new \GuzzleHttp\Psr7\Response($statusCode, [], $body);
+        return new \GuzzleHttp\Psr7\Response($statusCode, [], $body ?: $error);
     }
 
     public function get($uri, $queryParams = [])
