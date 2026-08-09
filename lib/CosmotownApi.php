@@ -136,13 +136,10 @@ class CosmotownApi {
 
     public function lockDomain($params) {
         $domain = $params['sld'] . '.' . $params['tld'];
-        $info = $this->getInfo($params);
         $lockStatus = $params['lockenabled'];
         $lock = ($lockStatus === 'locked');
         $options = [
-            'enable_private_whois' => isset($info['whois_privacy']) ? $info['whois_privacy'] : false,
             'lock_domain' => $lock,
-            'enable_auto_billing' => isset($info['auto_billing']) ? $info['auto_billing'] : false
         ];
         $this->cosmotown->logDebug('lockDomain', ['domain' => $domain, 'lockenabled' => $lockStatus, 'lock' => $lock, 'options' => $options]);
         $response = $this->cosmotown->saveDomainInfo($domain, $options);
@@ -173,11 +170,8 @@ class CosmotownApi {
 
     public function idProtect($params) {
         $domain = $params['sld'] . '.' . $params['tld'];
-        $info = $this->getInfo($params);
         $options = [
             'enable_private_whois' => $params['protectenable'],
-            'lock_domain' => isset($info['locked']) ? $info['locked'] : false,
-            'enable_auto_billing' => isset($info['auto_billing']) ? $info['auto_billing'] : false
         ];
         $this->cosmotown->saveDomainInfo($domain, $options);
         return ['status' => 'success'];
