@@ -35,7 +35,8 @@ class Client
                 'Content-Type' => 'application/json',
                 'X-API-TOKEN' => $this->api_key,
             ],
-            'json' => $data,
+            'body' => json_encode($data),
+            'allow_redirects' => false,
         ]);
     }
 }
