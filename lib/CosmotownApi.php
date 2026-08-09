@@ -51,7 +51,10 @@ class CosmotownApi {
     public function saveNameserver($params) {
         $domain = $params['sld'] . '.' . $params['tld'];
         $nameservers = [$params['ns1'], $params['ns2'], $params['ns3'], $params['ns4']];
-        $this->cosmotown->saveDomainNameserver($domain, $nameservers);
+        $response = $this->cosmotown->saveDomainNameserver($domain, $nameservers);
+        if (isset($response['status']) && $response['status'] === 'error') {
+            return ['status' => 'error', 'message' => $response['message']];
+        }
         return ['status' => 'success'];
     }
 
