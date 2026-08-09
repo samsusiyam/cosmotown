@@ -86,23 +86,29 @@ class Cosmotown
     {
         $requestData = ['domain' => $domain, 'nameservers' => $nameservers];
         $response = $this->httpClient->post('savedomainnameservers', $requestData);
+        unset($this->domainInfoCache[$domain]);
         return $this->handleResponse($response);
     }
 
-    public function getDomainInfo($domain)
+    public function getDomainInfo($domain, $noCache = false)
     {
-        if (!isset($this->domainInfoCache[$domain])) {
-            $response = $this->httpClient->get('domaininfo', ['domain' => $domain]);
-            $result = $this->handleResponse($response);
-            $this->logDebug('getDomainInfo', ['domain' => $domain, 'response' => $result]);
-            $this->domainInfoCache[$domain] = $result;
+        if (!$noCache && isset($this->domainInfoCache[$domain])) {
+            return $this->domainInfoCache[$domain];
         }
-        return $this->domainInfoCache[$domain];
+        $params = ['domain' => $domain];
+        if ($noCache) {
+            $params['_t'] = time();
+        }
+        $response = $this->httpClient->get('domaininfo', $params);
+        $result = $this->handleResponse($response);
+        $this->logDebug('getDomainInfo', ['domain' => $domain, 'response' => $result]);
+        $this->domainInfoCache[$domain] = $result;
+        return $result;
     }
 
     public function getNameservers($domain)
     {
-        $responseData = $this->getDomainInfo($domain);
+        $responseData = $this->getDomainInfo($domain, true);
         if (isset($responseData['nameservers'])) {
             return $responseData['nameservers'];
         }
@@ -216,6 +222,7 @@ class Cosmotown
     {
         $requestData = ['domain' => $domain, 'options' => $options];
         $response = $this->httpClient->post('domaininfo', $requestData);
+        unset($this->domainInfoCache[$domain]);
         return $this->handleResponse($response);
     }
 
