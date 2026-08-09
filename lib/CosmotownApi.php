@@ -152,6 +152,7 @@ class CosmotownApi {
         $this->cosmotown->logDebug('lockDomain', ['domain' => $domain, 'lockenabled' => $lockStatus, 'lock' => $lock, 'options' => $options]);
         $response = $this->cosmotown->saveDomainInfo($domain, $options);
         $this->cosmotown->logDebug('lockDomain_response', ['response' => $response]);
+        sleep(3);
         return ['status' => 'success'];
     }
 
