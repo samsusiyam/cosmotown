@@ -149,7 +149,7 @@ class CosmotownApi {
             $lock = false;
         }
         $options = [
-            'enable_private_whois' => false,
+            'enable_private_whois' => isset($info['whois_privacy']) ? $info['whois_privacy'] : false,
             'lock_domain' => $lock,
             'enable_auto_billing' => isset($info['auto_billing']) ? $info['auto_billing'] : false
         ];
@@ -162,7 +162,7 @@ class CosmotownApi {
         $info = $this->getInfo($params);
         $options = [
             'enable_private_whois' => $params['protectenable'],
-            'lock_domain' => false,
+            'lock_domain' => isset($info['locked']) ? $info['locked'] : false,
             'enable_auto_billing' => isset($info['auto_billing']) ? $info['auto_billing'] : false
         ];
         $this->cosmotown->saveDomainInfo($domain, $options);
