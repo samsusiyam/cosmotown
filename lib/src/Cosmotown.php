@@ -23,7 +23,11 @@ class Cosmotown
     public function handleResponse($response)
     {
         $statusCode = $response->getStatusCode();
-        $body = json_decode($response->getBody()->getContents(), true);
+        $rawBody = $response->getBody()->getContents();
+        $body = json_decode($rawBody, true);
+        if ($body === null && !empty($rawBody)) {
+            $this->logDebug('handleResponse_raw', ['status' => $statusCode, 'raw' => substr($rawBody, 0, 500)]);
+        }
         if ($statusCode >= 200 && $statusCode < 300) {
             return $body;
         }
