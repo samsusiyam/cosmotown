@@ -1,0 +1,20 @@
+{
+    "name": "rtraselbd/cosmotown",
+    "description": "Cosmotown PHP SDK",
+    "type": "library",
+    "require": {
+        "guzzlehttp/guzzle": "^7.8"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "RtRaselBD\\Cosmotown\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Md Rasel Islam"
+        }
+    ],
+    "minimum-stability": "stable"
+}
