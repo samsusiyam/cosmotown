@@ -136,7 +136,7 @@ class CosmotownApi {
 
     public function getInfo($params) {
         $domain = $params['sld'] . '.' . $params['tld'];
-        return $this->cosmotown->getDomainInfo($domain);
+        return $this->cosmotown->getDomainInfo($domain, true);
     }
 
     public function lockDomain($params) {
