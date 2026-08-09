@@ -134,11 +134,6 @@ class CosmotownApi {
         return $this->cosmotown->searchDomain($domain);
     }
 
-    public function getInfo($params) {
-        $domain = $params['sld'] . '.' . $params['tld'];
-        return $this->cosmotown->getDomainInfo($domain, true);
-    }
-
     public function lockDomain($params) {
         $domain = $params['sld'] . '.' . $params['tld'];
         $info = $this->getInfo($params);
@@ -152,7 +147,28 @@ class CosmotownApi {
         $this->cosmotown->logDebug('lockDomain', ['domain' => $domain, 'lockenabled' => $lockStatus, 'lock' => $lock, 'options' => $options]);
         $response = $this->cosmotown->saveDomainInfo($domain, $options);
         $this->cosmotown->logDebug('lockDomain_response', ['response' => $response]);
+        $cacheFile = dirname(__DIR__, 2) . '/lock_cache.json';
+        $cache = file_exists($cacheFile) ? json_decode(file_get_contents($cacheFile), true) : [];
+        $cache[$domain] = ['locked' => $lock, 'time' => time()];
+        @file_put_contents($cacheFile, json_encode($cache));
         return ['status' => 'success'];
+    }
+
+    public function getInfo($params) {
+        $domain = $params['sld'] . '.' . $params['tld'];
+        $cacheFile = dirname(__DIR__, 2) . '/lock_cache.json';
+        if (file_exists($cacheFile)) {
+            $cache = json_decode(file_get_contents($cacheFile), true);
+            if (isset($cache[$domain]) && (time() - $cache[$domain]['time']) < 30) {
+                $data = $this->cosmotown->getDomainInfo($domain, true);
+                $data['locked'] = $cache[$domain]['locked'];
+                return $data;
+            } else {
+                unset($cache[$domain]);
+                @file_put_contents($cacheFile, json_encode($cache));
+            }
+        }
+        return $this->cosmotown->getDomainInfo($domain, true);
     }
 
     public function idProtect($params) {
