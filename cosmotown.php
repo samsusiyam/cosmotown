@@ -62,10 +62,14 @@ function cosmotown_GetNameservers($params)
 {
     $cosmotown = (cosmotown_getApiInstance($params));
     $response = $cosmotown->getNameserver($params);
-    if ((isset($response['status']) && ($response['status'] === 'error'))) {
-        return ['error' => $response['message']];
+    if (!is_array($response)) {
+        return null;
     }
-    return null;
+    $ns = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $ns['ns' . $i] = isset($response[$i - 1]) ? $response[$i - 1] : '';
+    }
+    return $ns;
 }
 function cosmotown_SaveNameservers($params)
 {
@@ -224,7 +228,7 @@ function cosmotown_Sync($params)
     if ((isset($response['status']) && ($response['status'] === 'error'))) {
         return ['error' => $response['message']];
     }
-    $expiryDate = isset($response['expirydate']) ? $response['expirydate'] : date('Y-m-d');
+    $expiryDate = isset($response['expirydate']) ? $response['expirydate'] : (isset($response['expiration_date']) ? $response['expiration_date'] : date('Y-m-d'));
     return ['expirydate' => $expiryDate, 'active' => $response['status'], 'expired' => ($expiryDate < date('Y-m-d')), 'transferredAway' => false];
 }
 function cosmotown_formatRecords($records)
