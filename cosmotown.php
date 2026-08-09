@@ -76,6 +76,43 @@ function cosmotown_SaveNameservers($params)
     }
     return ['success' => true];
 }
+function cosmotown_mapContact($c)
+{
+    return [
+        'First Name' => $c['first_name'] ?? $c['FirstName'] ?? '',
+        'Last Name' => $c['last_name'] ?? $c['LastName'] ?? '',
+        'Company Name' => $c['company'] ?? $c['Company'] ?? '',
+        'Email Address' => $c['email'] ?? $c['Email'] ?? '',
+        'Address 1' => $c['address1'] ?? $c['Address1'] ?? '',
+        'Address 2' => $c['address2'] ?? $c['Address2'] ?? '',
+        'City' => $c['city'] ?? $c['City'] ?? '',
+        'State' => $c['state'] ?? $c['State'] ?? '',
+        'Postcode' => $c['zip'] ?? $c['Zip'] ?? '',
+        'Country' => $c['country'] ?? $c['Country'] ?? '',
+        'Phone Number' => $c['phone'] ?? $c['Phone'] ?? '',
+        'Fax Number' => $c['fax'] ?? $c['Fax'] ?? '',
+    ];
+}
+
+function cosmotown_extractContacts($response)
+{
+    if (isset($response['registrant']['contacts'])) {
+        $contacts = $response['registrant']['contacts'];
+        return [
+            'Registrant' => isset($contacts['registrant']) ? cosmotown_mapContact($contacts['registrant']) : [],
+            'Technical' => isset($contacts['technical']) ? cosmotown_mapContact($contacts['technical']) : [],
+            'Billing' => isset($contacts['billing']) ? cosmotown_mapContact($contacts['billing']) : [],
+            'Admin' => isset($contacts['administrative']) ? cosmotown_mapContact($contacts['administrative']) : [],
+        ];
+    }
+    return [
+        'Registrant' => isset($response['registrant']) ? cosmotown_mapContact($response['registrant']) : [],
+        'Technical' => isset($response['technical']) ? cosmotown_mapContact($response['technical']) : [],
+        'Billing' => isset($response['billing']) ? cosmotown_mapContact($response['billing']) : [],
+        'Admin' => isset($response['administrative']) ? cosmotown_mapContact($response['administrative']) : [],
+    ];
+}
+
 function cosmotown_GetContactDetails($params)
 {
     $cosmotown = (cosmotown_getApiInstance($params));
@@ -83,7 +120,7 @@ function cosmotown_GetContactDetails($params)
     if ((isset($response['status']) && ($response['status'] === 'error'))) {
         return ['error' => $response['message']];
     }
-    return ['Registrant' => ['First Name' => $response['registrant']['FirstName'], 'Last Name' => $response['registrant']['LastName'], 'Company Name' => $response['registrant']['Company'], 'Email Address' => $response['registrant']['Email'], 'Address 1' => $response['registrant']['Address1'], 'Address 2' => $response['registrant']['Address2'], 'City' => $response['registrant']['City'], 'State' => $response['registrant']['State'], 'Postcode' => $response['registrant']['Zip'], 'Country' => $response['registrant']['Country'], 'Phone Number' => $response['registrant']['Phone'], 'Fax Number' => $response['registrant']['Fax']], 'Technical' => ['First Name' => $response['technical']['FirstName'], 'Last Name' => $response['technical']['LastName'], 'Company Name' => $response['technical']['Company'], 'Email Address' => $response['technical']['Email'], 'Address 1' => $response['technical']['Address1'], 'Address 2' => $response['technical']['Address2'], 'City' => $response['technical']['City'], 'State' => $response['technical']['State'], 'Postcode' => $response['technical']['Zip'], 'Country' => $response['technical']['Country'], 'Phone Number' => $response['technical']['Phone'], 'Fax Number' => $response['technical']['Fax']], 'Billing' => ['First Name' => $response['billing']['FirstName'], 'Last Name' => $response['billing']['LastName'], 'Company Name' => $response['billing']['Company'], 'Email Address' => $response['billing']['Email'], 'Address 1' => $response['billing']['Address1'], 'Address 2' => $response['billing']['Address2'], 'City' => $response['billing']['City'], 'State' => $response['billing']['State'], 'Postcode' => $response['billing']['Zip'], 'Country' => $response['billing']['Country'], 'Phone Number' => $response['billing']['Phone'], 'Fax Number' => $response['billing']['Fax']], 'Admin' => ['First Name' => $response['administrative']['FirstName'], 'Last Name' => $response['administrative']['LastName'], 'Company Name' => $response['administrative']['Company'], 'Email Address' => $response['administrative']['Email'], 'Address 1' => $response['administrative']['Address1'], 'Address 2' => $response['administrative']['Address2'], 'City' => $response['administrative']['City'], 'State' => $response['administrative']['State'], 'Postcode' => $response['administrative']['Zip'], 'Country' => $response['administrative']['Country'], 'Phone Number' => $response['administrative']['Phone'], 'Fax Number' => $response['administrative']['Fax']]];
+    return cosmotown_extractContacts($response);
 }
 function cosmotown_SaveContactDetails($params)
 {
