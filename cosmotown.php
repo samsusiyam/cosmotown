@@ -174,7 +174,7 @@ function cosmotown_GetRegistrarLock($params)
 function cosmotown_SaveRegistrarLock($params)
 {
     $cosmotown = (cosmotown_getApiInstance($params));
-    $response = $cosmotown->lockDomain();
+    $response = $cosmotown->lockDomain($params);
     if ((isset($response['status']) && ($response['status'] === 'error'))) {
         return ['error' => $response['message']];
     }
