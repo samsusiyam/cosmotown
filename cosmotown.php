@@ -5,20 +5,14 @@
  * Original: ioncube encoded WHMCS Cosmotown Domain Registrar Module
  */
 const COSMOTOWN_API_LIVE_URL = 'https://cosmotown.com/v1/reseller';
-const COSMOTOWN_API_TEST_1_URL = 'https://ndb.cosmotown7.com/v1/reseller';
-const COSMOTOWN_API_TEST_2_URL = 'https://ndd.cosmotown7.com/v1/reseller';
-const COSMOTOWN_API_TEST_3_URL = 'https://sandbox.cosmotown7.com/v1/reseller';
+const COSMOTOWN_API_SANDBOX_URL = 'https://sandbox.cosmotown.com/v1/reseller';
 
 function cosmotown_getApiBaseUrl($params)
 {
     $mode = isset($params['APIMode']) ? $params['APIMode'] : 'Live';
     switch ($mode) {
-        case 'Test Mode 1 (Ndb Server)':
-            return COSMOTOWN_API_TEST_1_URL;
-        case 'Test Mode 2 (Ndd Server)':
-            return COSMOTOWN_API_TEST_2_URL;
         case 'Sandbox':
-            return COSMOTOWN_API_TEST_3_URL;
+            return COSMOTOWN_API_SANDBOX_URL;
         default:
             return COSMOTOWN_API_LIVE_URL;
     }
@@ -35,7 +29,7 @@ function cosmotown_MetaData()
 }
 function cosmotown_getConfigArray()
 {
-    return ['FriendlyName' => ['Type' => 'System', 'Value' => 'Cosmotown'], 'APIKey' => ['FriendlyName' => 'API Key', 'Type' => 'password', 'Size' => '255', 'Default' => '', 'Description' => 'Enter API Key Here'], 'APIMode' => ['FriendlyName' => 'API Mode', 'Type' => 'dropdown', 'Options' => ['Live Mode' => 'Live Mode', 'Test Mode 1 (Ndb Server)' => 'Test Mode 1 (Ndb Server)', 'Test Mode 2 (Ndd Server)' => 'Test Mode 2 (Ndd Server)', 'Sandbox' => 'Sandbox'], 'Default' => 'Live Mode', 'Description' => 'Select API Mode'], 'CouponCode' => ['FriendlyName' => 'Coupon Code', 'Type' => 'text', 'Size' => '255', 'Default' => '', 'Description' => 'Enter Coupon Code Here (If Available in Cosmotown)']];
+    return ['FriendlyName' => ['Type' => 'System', 'Value' => 'Cosmotown'], 'APIKey' => ['FriendlyName' => 'API Key', 'Type' => 'password', 'Size' => '255', 'Default' => '', 'Description' => 'Enter API Key Here'], 'APIMode' => ['FriendlyName' => 'API Mode', 'Type' => 'dropdown', 'Options' => ['Live Mode' => 'Production (cosmotown.com)', 'Sandbox' => 'Sandbox (sandbox.cosmotown.com)'], 'Default' => 'Live Mode', 'Description' => 'Select API Mode'], 'CouponCode' => ['FriendlyName' => 'Coupon Code', 'Type' => 'text', 'Size' => '255', 'Default' => '', 'Description' => 'Enter Coupon Code Here (If Available in Cosmotown)']];
 }
 function cosmotown_RegisterDomain($params)
 {
@@ -216,11 +210,11 @@ function cosmotown_TestConnection($params)
 {
     try {
         $cosmotown = cosmotown_getApiInstance($params);
-        $response = $cosmotown->getInfo(['sld' => 'test', 'tld' => 'com']);
-        if (isset($response['status']) && $response['status'] === 'error') {
-            return ['success' => false, 'error' => $response['message']];
+        $response = $cosmotown->ping();
+        if (isset($response['ip'])) {
+            return ['success' => true, 'msg' => 'Connection successful. IP: ' . $response['ip']];
         }
-        return ['success' => true, 'msg' => 'Connection successful'];
+        return ['success' => false, 'error' => 'Unexpected response: ' . json_encode($response)];
     } catch (\Exception $e) {
         return ['success' => false, 'error' => $e->getMessage()];
     }

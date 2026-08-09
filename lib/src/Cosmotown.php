@@ -48,6 +48,12 @@ class Cosmotown
         return $this->handleResponse($response);
     }
 
+    public function ping()
+    {
+        $response = $this->httpClient->get('ping');
+        return $this->handleResponse($response);
+    }
+
     public function registerDomain($domain, $years = 1, $couponId = '')
     {
         $requestData = ['coupon_id' => $couponId, 'items' => [['name' => $domain, 'years' => (int)$years]]];

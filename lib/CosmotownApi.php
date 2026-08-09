@@ -190,6 +190,10 @@ class CosmotownApi {
         return true;
     }
 
+    public function ping() {
+        return $this->cosmotown->ping();
+    }
+
     public function getLocalKey() {
         return '';
     }
