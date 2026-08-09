@@ -222,7 +222,7 @@ class Cosmotown
     {
         $requestData = ['domain' => $domain] + $options;
         $this->logDebug('saveDomainInfo', ['domain' => $domain, 'request' => $requestData]);
-        $response = $this->httpClient->post('savedomaininfo', $requestData);
+        $response = $this->httpClient->post('domaininfo', $requestData);
         $result = $this->handleResponse($response);
         $this->logDebug('saveDomainInfo_response', ['response' => $result]);
         unset($this->domainInfoCache[$domain]);
