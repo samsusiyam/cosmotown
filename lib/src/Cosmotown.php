@@ -220,7 +220,7 @@ class Cosmotown
 
     public function saveDomainInfo($domain, $options = [])
     {
-        $requestData = ['domain' => $domain, 'options' => $options];
+        $requestData = ['domain' => $domain] + $options;
         $this->logDebug('saveDomainInfo', ['domain' => $domain, 'request' => $requestData]);
         $response = $this->httpClient->post('domaininfo', $requestData);
         $result = $this->handleResponse($response);

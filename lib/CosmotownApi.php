@@ -138,16 +138,21 @@ class CosmotownApi {
         $domain = $params['sld'] . '.' . $params['tld'];
         $lock = (isset($params['lockenabled']) && $params['lockenabled'] === 'locked');
         $this->cosmotown->logDebug('lockDomain', ['domain' => $domain, 'lockenabled' => $params['lockenabled'], 'lock' => $lock]);
-        $response = $this->cosmotown->saveDomainInfo($domain, ['lock_domain' => $lock]);
-        $this->cosmotown->logDebug('lockDomain_response', ['response' => $response]);
-        if (isset($response['error'])) {
-            return ['status' => 'error', 'message' => $response['error']];
+        try {
+            $response = $this->cosmotown->saveDomainInfo($domain, ['lock_domain' => $lock]);
+            $this->cosmotown->logDebug('lockDomain_response', ['response' => $response]);
+            if (isset($response['error'])) {
+                return ['status' => 'error', 'message' => $response['error']];
+            }
+            $cacheFile = dirname(__DIR__, 2) . '/lock_cache.json';
+            $cache = file_exists($cacheFile) ? json_decode(file_get_contents($cacheFile), true) : [];
+            $cache[$domain] = ['locked' => $lock, 'time' => time()];
+            @file_put_contents($cacheFile, json_encode($cache));
+            return ['status' => 'success'];
+        } catch (\Exception $e) {
+            $this->cosmotown->logDebug('lockDomain_error', ['message' => $e->getMessage()]);
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
-        $cacheFile = dirname(__DIR__, 2) . '/lock_cache.json';
-        $cache = file_exists($cacheFile) ? json_decode(file_get_contents($cacheFile), true) : [];
-        $cache[$domain] = ['locked' => $lock, 'time' => time()];
-        @file_put_contents($cacheFile, json_encode($cache));
-        return ['status' => 'success'];
     }
 
     public function getInfo($params) {
