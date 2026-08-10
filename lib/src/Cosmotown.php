@@ -4,15 +4,8 @@ namespace RtRaselBD\Cosmotown;
 
 class Cosmotown
 {
-    public $administrative;
     public $apiKey;
-    public $billing;
-    public $domainContactInfoCache = [];
-    public $domainInfoCache = [];
     public $httpClient;
-    public $nameservers;
-    public $registrant;
-    public $technical;
 
     public function __construct($apiKey, $baseUrl)
     {
@@ -25,27 +18,13 @@ class Cosmotown
         $statusCode = $response->getStatusCode();
         $rawBody = $response->getBody()->getContents();
         $body = json_decode($rawBody, true);
-        if ($body === null && !empty($rawBody)) {
-            $this->logDebug('handleResponse_raw', ['status' => $statusCode, 'raw' => substr($rawBody, 0, 500)]);
-        }
+
         if ($statusCode >= 200 && $statusCode < 300) {
             return $body;
         }
-        $message = isset($body['message']) ? $body['message'] : 'API request failed with status code: ' . $statusCode;
+
+        $message = isset($body['error_message']) ? $body['error_message'] : 'API request failed with status code: ' . $statusCode;
         throw new \RtRaselBD\Cosmotown\Exceptions\CosmotownException($message);
-    }
-
-    public function logDebug($method, $data)
-    {
-        $logFile = dirname(__DIR__, 2) . '/cosmotown_debug.log';
-        $entry = date('[Y-m-d H:i:s]') . " [$method] " . json_encode($data) . PHP_EOL;
-        @file_put_contents($logFile, $entry, FILE_APPEND);
-    }
-
-    public function testConnection()
-    {
-        $response = $this->httpClient->get('test');
-        return $this->handleResponse($response);
     }
 
     public function ping()
@@ -54,17 +33,9 @@ class Cosmotown
         return $this->handleResponse($response);
     }
 
-    public function registerDomain($domain, $years = 1, $couponId = '')
+    public function listDomains($limit = 30, $offset = 0)
     {
-        $requestData = ['coupon_id' => $couponId, 'items' => [['name' => $domain, 'years' => (int)$years]]];
-        $response = $this->httpClient->post('registerdomains', $requestData);
-        return $this->handleResponse($response);
-    }
-
-    public function registerDomains($domains, $couponId = '')
-    {
-        $requestData = ['coupon_id' => $couponId, 'items' => $domains];
-        $response = $this->httpClient->post('registerdomains', $requestData);
+        $response = $this->httpClient->get('listdomains', ['limit' => $limit, 'offset' => $offset]);
         return $this->handleResponse($response);
     }
 
@@ -82,170 +53,161 @@ class Cosmotown
         return $this->handleResponse($response);
     }
 
-    public function saveDomainNameserver($domain, $nameservers)
+    public function getDomainInfo($domain)
     {
-        $requestData = ['domain' => $domain, 'nameservers' => $nameservers];
-        $response = $this->httpClient->post('savedomainnameservers', $requestData);
-        unset($this->domainInfoCache[$domain]);
+        $response = $this->httpClient->get('domaininfo', ['domain' => $domain]);
         return $this->handleResponse($response);
     }
 
-    public function getDomainInfo($domain, $noCache = false)
+    public function registerDomain($domain, $years = 1, $couponId = '')
     {
-        if (!$noCache && isset($this->domainInfoCache[$domain])) {
-            return $this->domainInfoCache[$domain];
-        }
-        $params = ['domain' => $domain];
-        if ($noCache) {
-            $params['_t'] = time();
-        }
-        $response = $this->httpClient->get('domaininfo', $params);
-        $result = $this->handleResponse($response);
-        $this->logDebug('getDomainInfo', ['domain' => $domain, 'response' => $result]);
-        $this->domainInfoCache[$domain] = $result;
-        return $result;
-    }
-
-    public function getNameservers($domain)
-    {
-        $responseData = $this->getDomainInfo($domain, true);
-        if (isset($responseData['nameservers'])) {
-            return $responseData['nameservers'];
-        }
-        if (isset($responseData['name_servers'])) {
-            return $responseData['name_servers'];
-        }
-        if (isset($responseData['ns1'])) {
-            $ns = [];
-            for ($i = 1; $i <= 4; $i++) {
-                if (isset($responseData['ns' . $i]) && !empty($responseData['ns' . $i])) {
-                    $ns[] = $responseData['ns' . $i];
-                }
-            }
-            return $ns;
-        }
-        if (isset($responseData['data']['nameservers'])) {
-            return $responseData['data']['nameservers'];
-        }
-        if (isset($responseData['data']['name_servers'])) {
-            return $responseData['data']['name_servers'];
-        }
-        return [];
-    }
-
-    public function getDomainContactInfo($domain)
-    {
-        if (!isset($this->domainContactInfoCache[$domain])) {
-            $response = $this->httpClient->get('contactinfo', ['domain' => $domain]);
-            $this->domainContactInfoCache[$domain] = $this->handleResponse($response);
-        }
-        return $this->domainContactInfoCache[$domain];
-    }
-
-    public function saveDomainContactInfo($domain, $registrant, $administrative, $technical, $billing)
-    {
-        $requestData = ['registrant' => $registrant, 'administrative' => $administrative, 'technical' => $technical, 'billing' => $billing];
-        $endpoint = 'contactinfo?domain=' . $domain;
-        $response = $this->httpClient->post($endpoint, $requestData);
+        $requestData = [
+            'coupon_id' => $couponId,
+            'items' => [['name' => $domain, 'years' => (int) $years]],
+        ];
+        $response = $this->httpClient->post('registerdomains', $requestData);
         return $this->handleResponse($response);
     }
 
-    public function getAllContactInfo($domain)
+    public function registerDomains($domains, $couponId = '')
     {
-        return $this->getDomainContactInfo($domain);
-    }
-
-    public function getRegistrantContactInfo($domain)
-    {
-        $contactInfo = $this->getAllContactInfo($domain);
-        if (!isset($contactInfo['registrant'])) {
-            throw new \RtRaselBD\Cosmotown\Exceptions\CosmotownException('Registrant contact not found in the domain information response');
-        }
-        return $contactInfo['registrant'];
-    }
-
-    public function getAdministrativeContactInfo($domain)
-    {
-        $contactInfo = $this->getAllContactInfo($domain);
-        if (!isset($contactInfo['administrative'])) {
-            throw new \RtRaselBD\Cosmotown\Exceptions\CosmotownException('Administrative contact not found in the domain information response');
-        }
-        return $contactInfo['administrative'];
-    }
-
-    public function getTechnicalContactInfo($domain)
-    {
-        $contactInfo = $this->getAllContactInfo($domain);
-        if (!isset($contactInfo['technical'])) {
-            throw new \RtRaselBD\Cosmotown\Exceptions\CosmotownException('Technical contact not found in the domain information response');
-        }
-        return $contactInfo['technical'];
-    }
-
-    public function getBillingContactInfo($domain)
-    {
-        $contactInfo = $this->getAllContactInfo($domain);
-        if (!isset($contactInfo['billing'])) {
-            throw new \RtRaselBD\Cosmotown\Exceptions\CosmotownException('Billing contact not found in the domain information response');
-        }
-        return $contactInfo['billing'];
-    }
-
-    public function getDomainDnsRecords($domain)
-    {
-        $response = $this->httpClient->get('getdomaindnssettings', ['domain' => $domain]);
-        return $this->handleResponse($response);
-    }
-
-    public function saveDnsRecords($domain, $records)
-    {
-        $requestData = ['domain' => $domain, 'records' => $records];
-        $response = $this->httpClient->post('savedomaindnssettings', $requestData);
+        $requestData = [
+            'coupon_id' => $couponId,
+            'items' => $domains,
+        ];
+        $response = $this->httpClient->post('registerdomains', $requestData);
         return $this->handleResponse($response);
     }
 
     public function renewDomain($domain, $years = 1)
     {
-        $requestData = ['items' => [['name' => $domain, 'years' => (int)$years]]];
+        $requestData = [
+            'items' => [['name' => $domain, 'years' => (int) $years]],
+        ];
         $response = $this->httpClient->post('renewdomains', $requestData);
         return $this->handleResponse($response);
     }
 
     public function renewDomains($domains)
     {
-        $requestData = ['items' => $domains];
+        $requestData = [
+            'items' => $domains,
+        ];
         $response = $this->httpClient->post('renewdomains', $requestData);
         return $this->handleResponse($response);
     }
 
-    public function saveDomainInfo($domain, $options = [])
-    {
-        $requestData = ['domain' => $domain] + $options;
-        $this->logDebug('saveDomainInfo', ['domain' => $domain, 'request' => $requestData]);
-        $response = $this->httpClient->post('domaininfo', $requestData);
-        $result = $this->handleResponse($response);
-        $this->logDebug('saveDomainInfo_response', ['response' => $result]);
-        unset($this->domainInfoCache[$domain]);
-        return $result;
-    }
-
     public function transferDomain($domain, $authCode)
     {
-        $requestData = ['items' => [['name' => $domain, 'authCode' => base64_encode($authCode)]]];
+        $requestData = [
+            'items' => [['name' => $domain, 'authCode' => base64_encode($authCode)]],
+        ];
         $response = $this->httpClient->post('transferdomains', $requestData);
         return $this->handleResponse($response);
     }
 
     public function transferDomains($domains)
     {
-        $requestData = ['items' => $domains];
+        $requestData = [
+            'items' => $domains,
+        ];
         $response = $this->httpClient->post('transferdomains', $requestData);
+        return $this->handleResponse($response);
+    }
+
+    public function getDomainStatus($domains)
+    {
+        $requestData = ['domains' => $domains];
+        $response = $this->httpClient->post('domainstatus', $requestData);
+        return $this->handleResponse($response);
+    }
+
+    public function saveDomainInfo($domain, $options = [])
+    {
+        $requestData = [
+            'domain' => $domain,
+            'options' => $options,
+        ];
+        $response = $this->httpClient->post('domaininfo', $requestData);
         return $this->handleResponse($response);
     }
 
     public function getDomainEPPCode($domain)
     {
         $response = $this->httpClient->get('domainepp', ['domain' => $domain]);
+        return $this->handleResponse($response);
+    }
+
+    public function saveDomainNameservers($domain, $nameservers)
+    {
+        $requestData = [
+            'domain' => $domain,
+            'nameservers' => $nameservers,
+        ];
+        $response = $this->httpClient->post('savedomainnameservers', $requestData);
+        return $this->handleResponse($response);
+    }
+
+    public function getDomainDNS($domain)
+    {
+        $response = $this->httpClient->get('getdomaindnssettings', ['domain' => $domain]);
+        return $this->handleResponse($response);
+    }
+
+    public function saveDomainDNS($domain, $records)
+    {
+        $requestData = [
+            'domain' => $domain,
+            'records' => $records,
+        ];
+        $response = $this->httpClient->post('savedomaindnssettings', $requestData);
+        return $this->handleResponse($response);
+    }
+
+    public function getContactInfo($domain)
+    {
+        $response = $this->httpClient->get('contactinfo', ['domain' => $domain]);
+        return $this->handleResponse($response);
+    }
+
+    public function getDefaultContactInfo()
+    {
+        $response = $this->httpClient->get('contactinfo');
+        return $this->handleResponse($response);
+    }
+
+    public function saveContactInfo($domain, $contactData)
+    {
+        $response = $this->httpClient->post('contactinfo?domain=' . $domain, $contactData);
+        return $this->handleResponse($response);
+    }
+
+    public function getTldPrice($tld)
+    {
+        $response = $this->httpClient->get('tldprice', ['tld' => $tld]);
+        return $this->handleResponse($response);
+    }
+
+    public function getDomainDNSSEC($domain)
+    {
+        $response = $this->httpClient->get('getdomaindnssec', ['domain' => $domain]);
+        return $this->handleResponse($response);
+    }
+
+    public function enableDomainDNSSEC($domain, $records)
+    {
+        $requestData = [
+            'domain' => $domain,
+            'records' => $records,
+        ];
+        $response = $this->httpClient->post('enabledomaindnssec', $requestData);
+        return $this->handleResponse($response);
+    }
+
+    public function disableDomainDNSSEC($domain)
+    {
+        $requestData = ['domain' => $domain];
+        $response = $this->httpClient->post('disabledomaindnssec', $requestData);
         return $this->handleResponse($response);
     }
 }
