@@ -136,13 +136,9 @@ class CosmotownApi {
 
     public function lockDomain($params) {
         $domain = $params['sld'] . '.' . $params['tld'];
-        $lockStatus = $params['lockenabled'];
-        $lock = ($lockStatus === 'locked');
-        $options = [
-            'lock_domain' => $lock,
-        ];
-        $this->cosmotown->logDebug('lockDomain', ['domain' => $domain, 'lockenabled' => $lockStatus, 'lock' => $lock, 'options' => $options]);
-        $response = $this->cosmotown->saveDomainInfo($domain, $options);
+        $lock = !empty($params['lockenabled']);
+        $this->cosmotown->logDebug('lockDomain', ['domain' => $domain, 'lockenabled' => $params['lockenabled'], 'lock' => $lock]);
+        $response = $this->cosmotown->saveDomainInfo($domain, ['lock_domain' => $lock]);
         $this->cosmotown->logDebug('lockDomain_response', ['response' => $response]);
         $cacheFile = dirname(__DIR__, 2) . '/lock_cache.json';
         $cache = file_exists($cacheFile) ? json_decode(file_get_contents($cacheFile), true) : [];

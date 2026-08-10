@@ -166,10 +166,10 @@ function cosmotown_GetRegistrarLock($params)
     if ((isset($response['status']) && ($response['status'] === 'error'))) {
         return ['error' => $response['message']];
     }
-    if ($response['locked']) {
-        return 'locked';
+    if (isset($response['locked']) && $response['locked']) {
+        return ['success' => true, 'lockstatus' => 'locked'];
     }
-    return 'unlocked';
+    return ['success' => true, 'lockstatus' => 'unlocked'];
 }
 function cosmotown_SaveRegistrarLock($params)
 {
@@ -178,7 +178,7 @@ function cosmotown_SaveRegistrarLock($params)
     if ((isset($response['status']) && ($response['status'] === 'error'))) {
         return ['error' => $response['message']];
     }
-    return ['success' => 'success'];
+    return ['success' => true];
 }
 function cosmotown_GetDNS($params)
 {
