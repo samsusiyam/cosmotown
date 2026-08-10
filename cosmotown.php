@@ -43,7 +43,7 @@ function cosmotown_RegisterDomain($params)
 function cosmotown_TransferDomain($params)
 {
     $cosmotown = (cosmotown_getApiInstance($params));
-    $response = $cosmotown->transfer();
+    $response = $cosmotown->transfer($params);
     if ((isset($response['status']) && ($response['status'] === 'error'))) {
         return ['error' => $response['message']];
     }
@@ -167,9 +167,9 @@ function cosmotown_GetRegistrarLock($params)
         return ['error' => $response['message']];
     }
     if (isset($response['locked']) && $response['locked']) {
-        return ['success' => true, 'lockstatus' => 'locked'];
+        return 'locked';
     }
-    return ['success' => true, 'lockstatus' => 'unlocked'];
+    return 'unlocked';
 }
 function cosmotown_SaveRegistrarLock($params)
 {

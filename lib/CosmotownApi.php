@@ -136,7 +136,7 @@ class CosmotownApi {
 
     public function lockDomain($params) {
         $domain = $params['sld'] . '.' . $params['tld'];
-        $lock = !empty($params['lockenabled']);
+        $lock = (isset($params['lockenabled']) && $params['lockenabled'] === 'locked');
         $this->cosmotown->logDebug('lockDomain', ['domain' => $domain, 'lockenabled' => $params['lockenabled'], 'lock' => $lock]);
         $response = $this->cosmotown->saveDomainInfo($domain, ['lock_domain' => $lock]);
         $this->cosmotown->logDebug('lockDomain_response', ['response' => $response]);
