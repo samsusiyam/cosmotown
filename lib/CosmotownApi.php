@@ -164,6 +164,8 @@ class CosmotownApi {
                 $data = $this->cosmotown->getDomainInfo($domain, true);
                 if (isset($data['domain'])) {
                     $data['domain']['locked'] = $cache[$domain]['locked'];
+                } else {
+                    $data['domain'] = ['locked' => $cache[$domain]['locked']];
                 }
                 $data['locked'] = $cache[$domain]['locked'];
                 return $data;
