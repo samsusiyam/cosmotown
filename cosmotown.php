@@ -85,8 +85,17 @@ function cosmotown_GetNameservers($params)
         return null;
     }
     $ns = [];
-    for ($i = 1; $i <= 5; $i++) {
-        $ns['ns' . $i] = isset($response[$i - 1]) ? $response[$i - 1] : '';
+    if (isset($response['nameservers']) && is_array($response['nameservers'])) {
+        $response = $response['nameservers'];
+    }
+    if (isset($response[0]) || empty($response)) {
+        for ($i = 1; $i <= 5; $i++) {
+            $ns['ns' . $i] = isset($response[$i - 1]) ? $response[$i - 1] : '';
+        }
+    } else {
+        for ($i = 1; $i <= 5; $i++) {
+            $ns['ns' . $i] = isset($response['ns' . $i]) ? $response['ns' . $i] : '';
+        }
     }
     return $ns;
 }
