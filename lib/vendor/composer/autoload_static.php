@@ -14,14 +14,16 @@ class ComposerStaticInitc9d1712c89a185e5e43835a7b621bf09
     }
 
     public static $prefixesPsr4 = array (
-        'RtRaselBD\\Cosmotown\\' =>
-            array (
-                0 => __DIR__ . '/../..' . '/src',
-            ),
-        'WHMCS\\Module\\Registrar\\Cosmotown\\' =>
-            array (
-                0 => __DIR__ . '/../..' . '',
-            ),
+        'R' => array (
+            'RtRaselBD\\Cosmotown\\' =>
+                array (
+                    0 => __DIR__ . '/../..' . '/src',
+                ),
+            'WHMCS\\Module\\Registrar\\Cosmotown\\' =>
+                array (
+                    0 => __DIR__ . '/../..' . '',
+                ),
+        ),
     );
 
     public static $fallbackDirsPsr4 = array (
