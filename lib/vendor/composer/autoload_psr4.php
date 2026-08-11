@@ -3,10 +3,10 @@
 return array (
     'RtRaselBD\\Cosmotown\\' =>
         array (
-            0 => __DIR__ . '/..' . '/src',
+            0 => __DIR__ . '/../..' . '/src',
         ),
     'WHMCS\\Module\\Registrar\\Cosmotown\\' =>
         array (
-            0 => __DIR__ . '/..' . '',
+            0 => __DIR__ . '/../..' . '',
         ),
 );
