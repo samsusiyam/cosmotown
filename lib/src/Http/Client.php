@@ -45,7 +45,7 @@ class Client
         $error = curl_error($ch);
         curl_close($ch);
 
-        return new \GuzzleHttp\Psr7\Response($statusCode, [], $body ?: $error);
+        return new \RtRaselBD\Cosmotown\Http\Response($statusCode, $body ?: $error);
     }
 
     public function get($uri, $queryParams = [])
